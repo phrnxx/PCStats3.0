@@ -1,0 +1,84 @@
+﻿using PCStats.Core.Benchmarking;
+using PCStats.Core.Hardware;
+using PCStats.Core.IPC;
+using PCStats.Shared.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace PCStats.Core
+{
+    public class CoreService
+    {
+        private readonly SensorReader _sensorReader;
+        private readonly CpuStresser _cpuStresser;
+        private readonly DataServer _dataServer;
+        private CancellationTokenSource _cts;
+
+        public CoreService()
+        {
+            _sensorReader = new SensorReader();
+            _cpuStresser = new CpuStresser();
+            _dataServer = new DataServer();
+        }
+
+        public void Start()
+        {
+            _cts = new CancellationTokenSource();
+
+            // Запуск сервера IPC
+            Task.Run(() => _dataServer.StartAsync(_cts.Token));
+
+            // Запуск цикла опроса датчиков
+            Task.Run(() => MonitoringLoop(_cts.Token));
+
+            Console.WriteLine("Ядро PCStats активировано. Духи машины пробудились.");
+        }
+
+        public void Stop()
+        {
+            _cts?.Cancel();
+            _cpuStresser.Stop();
+            _sensorReader.Close();
+
+            Console.WriteLine("Ядро остановлено.");
+        }
+
+        public void StartBenchmark() => _cpuStresser.Start();
+        public void StopBenchmark() => _cpuStresser.Stop();
+
+        private async Task MonitoringLoop(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    var rawData = _sensorReader.GetAllStats();
+                    var sensorList = new List<SensorData>();
+
+                    foreach (var item in rawData)
+                    {
+                        // Разрезаем строку "[CPU] Core #1" на части
+                        var parts = item.Key.Split(new[] { ']' }, 2);
+                        string hName = parts[0].TrimStart('[');
+                        string sName = parts.Length > 1 ? parts[1].Trim() : item.Key;
+
+                        sensorList.Add(new SensorData
+                        {
+                            HardwareName = hName,
+                            SensorName = sName,
+                            Value = (item.Value ?? 0).ToString("0.0")
+                        });
+                    }
+
+                    // Отправляем структурированный список в UI
+                    await _dataServer.BroadcastDataAsync(sensorList, token);
+                    await Task.Delay(1000, token);
+                }
+                catch (TaskCanceledException) { break; }
+                catch (Exception ex) { Console.WriteLine($"Сбой: {ex.Message}"); }
+            }
+        }
+    }
+}
