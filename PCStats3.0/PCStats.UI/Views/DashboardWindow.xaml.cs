@@ -31,7 +31,7 @@ namespace PCStats.UI.Views
         }
         private void BtnGithub_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            System.Diagnostics.Process.Start("https://github.com/phrnxx");
+            System.Diagnostics.Process.Start("https://github.com/phrnxx/PCStats3.0");
         }
         protected override void OnClosed(System.EventArgs e)
         {
