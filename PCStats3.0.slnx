@@ -1,3 +1,9 @@
 <Solution>
-  <Project Path="PCStats3.0/PCStats3.0.csproj" Id="d289c2e1-36ef-4b4f-94a3-c239f14194e5" />
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="PCStats3.0/PCStats3.0.csproj" Id="d289c2e1-36ef-4b4f-94a3-c239f14194e5">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>
