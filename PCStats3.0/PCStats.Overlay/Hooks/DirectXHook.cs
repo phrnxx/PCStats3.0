@@ -24,18 +24,18 @@ namespace PCStats.Overlay.Hooks
         private List<SensorData> _currentData;
         private TextRenderer _renderer;
 
-        private bool _isOverlayVisible = false;
+        // ФИКС: Оверлей включен сразу по умолчанию!
+        private bool _isOverlayVisible = true;
         private CancellationTokenSource _hotkeyCts;
 
         public DirectXHook()
         {
             _graphics = new Graphics() { PerPrimitiveAntiAliasing = true, TextAntiAliasing = true };
-
-            _window = new GraphicsWindow(0, 0, 500, 900, _graphics)
+            _window = new GraphicsWindow(0, 0, 450, 900, _graphics)
             {
                 FPS = 60,
                 IsTopmost = true,
-                IsVisible = false,
+                IsVisible = true, // Показываем сразу при запуске
                 X = 20,
                 Y = 20
             };
@@ -79,7 +79,6 @@ namespace PCStats.Overlay.Hooks
                     }
                 }
                 else wasPressed = false;
-
                 await Task.Delay(50, token);
             }
         }

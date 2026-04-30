@@ -28,7 +28,7 @@ namespace PCStats.UI.IPC
             {
                 try
                 {
-                    using (var client = new NamedPipeClientStream(".", "PCStatsDataPipe", PipeDirection.In))
+                    using (var client = new NamedPipeClientStream(".", "PCStatsDataPipe", PipeDirection.In, PipeOptions.Asynchronous))
                     {
                         ConnectionChanged?.Invoke(this, false);
                         await client.ConnectAsync(5000);
@@ -42,7 +42,7 @@ namespace PCStats.UI.IPC
                                 if (!string.IsNullOrEmpty(json))
                                 {
                                     var data = JsonSerializer.Deserialize<List<SensorData>>(json);
-                                    DataReceived?.Invoke(this, data);
+                                    if (data != null) DataReceived?.Invoke(this, data);
                                 }
                             }
                         }

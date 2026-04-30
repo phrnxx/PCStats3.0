@@ -13,9 +13,10 @@ namespace PCStats.Core.Hardware
             {
                 IsCpuEnabled = true,
                 IsGpuEnabled = true,
-                IsMemoryEnabled = false, // Не трогаем, чтобы не крашило RAMSPDToolkit
-                IsMotherboardEnabled = true,
-                IsControllerEnabled = true
+                IsMemoryEnabled = false,
+                IsMotherboardEnabled = false, // КРИТИЧЕСКИЙ ФИКС: Выключаем причину зависаний
+                IsControllerEnabled = false,
+                IsStorageEnabled = true
             };
             try { _computer.Open(); } catch { }
         }
@@ -23,68 +24,36 @@ namespace PCStats.Core.Hardware
         public Dictionary<string, string> GetFormattedStats()
         {
             var stats = new Dictionary<string, string>();
+            stats["[PCStats] Engine"] = "Online"; // Маячок. Должен быть виден всегда.
 
-            // МАЯЧОК: Всегда показывает, что ядро работает
-            stats["[PCStats] Engine"] = "Online";
-
-            if (_computer.Hardware.Count == 0)
+            foreach (IHardware hardware in _computer.Hardware)
             {
-                stats["[Система] Ошибка"] = "Нет доступа к железу (Нужен Админ)";
-                return stats;
-            }
+                // КРИТИЧЕСКИЙ ФИКС: Если датчик сбоит, пропускаем его, а не убиваем всю программу
+                try { hardware.Update(); } catch { continue; }
 
-            // Рекурсивный поиск (достает датчики с материнской платы)
-            void Traverse(IHardware hw)
-            {
-                hw.Update();
-                foreach (var sensor in hw.Sensors)
+                foreach (ISensor sensor in hardware.Sensors)
                 {
                     if (!sensor.Value.HasValue) continue;
-                    string sName = sensor.Name;
-                    bool isImportant = false;
 
+                    string sName = sensor.Name;
                     if (sensor.SensorType == SensorType.Temperature ||
                         sensor.SensorType == SensorType.Load ||
                         sensor.SensorType == SensorType.Clock ||
                         sensor.SensorType == SensorType.Fan ||
-                        sensor.SensorType == SensorType.Power)
-                    {
-                        isImportant = true;
-                    }
-
-                    // Отсекаем мусорные датчики
-                    if (sName.Contains("Thread") || sName.Contains("Warning") || sName.Contains("Critical"))
-                        isImportant = false;
-
-                    if (isImportant)
+                        sensor.SensorType == SensorType.Data)
                     {
                         string val = sensor.Value.Value.ToString("0.0");
                         if (sensor.SensorType == SensorType.Temperature) val += " °C";
                         else if (sensor.SensorType == SensorType.Load) val += " %";
                         else if (sensor.SensorType == SensorType.Clock) val += " MHz";
                         else if (sensor.SensorType == SensorType.Fan) val += " RPM";
-                        else if (sensor.SensorType == SensorType.Power) val += " W";
+                        else if (sensor.SensorType == SensorType.Data) val += " GB";
 
-                        string cleanHwName = hw.Name;
-                        // Универсальная чистка для любых ПК (у друга тоже будет красиво)
-                        if (cleanHwName.Contains("NVIDIA GeForce ")) cleanHwName = cleanHwName.Replace("NVIDIA GeForce ", "");
-                        if (cleanHwName.Contains("AMD Radeon ")) cleanHwName = cleanHwName.Replace("AMD Radeon ", "");
-
-                        string key = $"[{cleanHwName}] {sName}";
-
-                        int count = 1;
-                        while (stats.ContainsKey(key))
-                        {
-                            count++;
-                            key = $"[{cleanHwName}] {sName} #{count}";
-                        }
-                        stats[key] = val;
+                        string cleanHwName = hardware.Name.Replace("NVIDIA GeForce ", "").Replace("AMD Radeon ", "");
+                        stats[$"[{cleanHwName}] {sName}"] = val;
                     }
                 }
-                foreach (var sub in hw.SubHardware) Traverse(sub);
             }
-
-            foreach (var hw in _computer.Hardware) Traverse(hw);
             return stats;
         }
 

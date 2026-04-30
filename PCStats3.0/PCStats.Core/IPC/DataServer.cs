@@ -1,6 +1,7 @@
 ﻿using PCStats.Shared.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
@@ -35,28 +36,37 @@ namespace PCStats.Core.IPC
 
         public async Task BroadcastDataAsync(List<SensorData> data, CancellationToken token)
         {
-            // Формируем пакет и жестко добавляем символ переноса строки
-            string json = JsonSerializer.Serialize(data) + "\n";
-            byte[] buffer = Encoding.UTF8.GetBytes(json);
+            string json = JsonSerializer.Serialize(data);
+
+            NamedPipeServerStream[] clients;
+            lock (_connectedClients) { clients = _connectedClients.ToArray(); }
+
             List<NamedPipeServerStream> deadClients = new List<NamedPipeServerStream>();
+
+            foreach (var client in clients)
+            {
+                try
+                {
+                    if (client.IsConnected)
+                    {
+                        using (var writer = new StreamWriter(client, new UTF8Encoding(false), 1024, leaveOpen: true))
+                        {
+                            await writer.WriteLineAsync(json);
+                            await writer.FlushAsync();
+                        }
+                    }
+                    else { deadClients.Add(client); }
+                }
+                catch { deadClients.Add(client); }
+            }
 
             lock (_connectedClients)
             {
-                foreach (var client in _connectedClients)
+                foreach (var dead in deadClients)
                 {
-                    try
-                    {
-                        if (client.IsConnected)
-                        {
-                            client.Write(buffer, 0, buffer.Length);
-                            // КРИТИЧЕСКИЙ ФИКС: Проталкиваем данные из буфера прямо в клиент!
-                            client.Flush();
-                        }
-                        else { deadClients.Add(client); }
-                    }
-                    catch { deadClients.Add(client); }
+                    _connectedClients.Remove(dead);
+                    dead.Dispose();
                 }
-                foreach (var dead in deadClients) { _connectedClients.Remove(dead); dead.Dispose(); }
             }
         }
     }
