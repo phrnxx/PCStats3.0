@@ -108,8 +108,8 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,4">
 
-                        <TextBlock Text="v3.0.0" FontSize="13" Foreground="#3A3D42" Width="208" TextAlignment="Left" Height="22"/>
-                        <TextBlock Text="by.phrnxx" FontSize="13" Foreground="#3A3D42" Cursor="Hand" MouseLeftButtonDown="BtnGithub_Click" Width="80" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock Text="v3.0.0" FontSize="13" Foreground="#3A3D42" Width="220" TextAlignment="Left" Height="22"/>
+                        <TextBlock Text="by.phrnxx" FontSize="13" Foreground="#3A3D42" Cursor="Hand" MouseLeftButtonDown="BtnGithub_Click" Width="70" RenderTransformOrigin="0.5,0.5">
                             <TextBlock.RenderTransform>
                                 <TransformGroup>
                                     <ScaleTransform/>
