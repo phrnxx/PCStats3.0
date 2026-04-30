@@ -50,7 +50,7 @@ namespace PCStats.Core.IPC
 
         public async Task BroadcastDataAsync(List<SensorData> data, CancellationToken token)
         {
-            string json = JsonSerializer.Serialize(data);
+            string json = JsonSerializer.Serialize(data) + Environment.NewLine;
             byte[] buffer = Encoding.UTF8.GetBytes(json);
 
             List<NamedPipeServerStream> deadClients = new List<NamedPipeServerStream>();

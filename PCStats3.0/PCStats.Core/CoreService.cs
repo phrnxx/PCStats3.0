@@ -27,10 +27,8 @@ namespace PCStats.Core
         {
             _cts = new CancellationTokenSource();
 
-            // Запуск сервера IPC
             Task.Run(() => _dataServer.StartAsync(_cts.Token));
 
-            // Запуск цикла опроса датчиков
             Task.Run(() => MonitoringLoop(_cts.Token));
 
             Console.WriteLine("Ядро PCStats активировано. Духи машины пробудились.");
@@ -54,12 +52,11 @@ namespace PCStats.Core
             {
                 try
                 {
-                    var rawData = _sensorReader.GetAllStats();
+                    var rawData = _sensorReader.GetFormattedStats();
                     var sensorList = new List<SensorData>();
 
                     foreach (var item in rawData)
                     {
-                        // Разрезаем строку "[CPU] Core #1" на части
                         var parts = item.Key.Split(new[] { ']' }, 2);
                         string hName = parts[0].TrimStart('[');
                         string sName = parts.Length > 1 ? parts[1].Trim() : item.Key;
@@ -68,16 +65,21 @@ namespace PCStats.Core
                         {
                             HardwareName = hName,
                             SensorName = sName,
-                            Value = (item.Value ?? 0).ToString("0.0")
+                            Value = item.Value 
                         });
                     }
 
-                    // Отправляем структурированный список в UI
                     await _dataServer.BroadcastDataAsync(sensorList, token);
-                    await Task.Delay(1000, token);
+                    await Task.Delay(1000, token); 
                 }
-                catch (TaskCanceledException) { break; }
-                catch (Exception ex) { Console.WriteLine($"Сбой: {ex.Message}"); }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Сбой в цикле мониторинга: {ex.Message}");
+                }
             }
         }
     }

@@ -2,97 +2,193 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:PCStats.UI.ViewModels"
-        Title="PCStats 3.0" Height="600" Width="450"
-        Background="#0D0D0D" Foreground="#FFFFFF"
+        Title="PCStats 3.0" 
+        Height="650" Width="420" 
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
-        FontFamily="Consolas">
+        FontFamily="Consolas"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent">
 
     <Window.DataContext>
         <vm:DashboardViewModel />
     </Window.DataContext>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
-            <TextBlock Text="SYS" FontSize="28" FontWeight="Bold" Foreground="#00FFCC"/>
-            <TextBlock Text="MONITOR" FontSize="28" FontWeight="Light" Foreground="#888888"/>
-        </StackPanel>
+        <Storyboard x:Key="PulseAnim" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1.0" To="0.3" Duration="0:0:1" AutoReverse="True"/>
+        </Storyboard>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-            <Ellipse Width="8" Height="8" Margin="0,0,8,0">
-                <Ellipse.Style>
-                    <Style TargetType="Ellipse">
-                        <Setter Property="Fill" Value="#FF3333"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                <Setter Property="Fill" Value="#00FFCC"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Ellipse.Style>
-            </Ellipse>
-            <TextBlock FontSize="12" Foreground="#AAAAAA">
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
-                        <Setter Property="Text" Value="LINK OFFLINE"/>
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                <Setter Property="Text" Value="LINK ESTABLISHED"/>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </TextBlock.Style>
-            </TextBlock>
-        </StackPanel>
+        <ControlTemplate x:Key="ExpanderToggleButton" TargetType="ToggleButton">
+            <Border Background="Transparent" Padding="14,10" Cursor="Hand">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="32" Height="32" CornerRadius="6" Background="#1ADAA520" Margin="0,0,10,0">
+                        <TextBlock Text="■" Foreground="#DAA520" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14"/>
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{Binding Key}" FontSize="15" FontWeight="Bold" Foreground="#D0D2D6" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="Arrow" Grid.Column="2" Text="▼" Foreground="#3A3D42" FontSize="12" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform Angle="0"/>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+                </Grid>
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter TargetName="Arrow" Property="RenderTransform">
+                        <Setter.Value>
+                            <RotateTransform Angle="180"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding GroupedSensors}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Expander Header="{Binding Key}" 
-                                  Foreground="#00FFCC" 
-                                  FontSize="16" 
-                                  FontWeight="Bold"
-                                  Margin="0,0,0,10" 
-                                  Background="#1A1A1A"
-                                  BorderBrush="#333333"
-                                  BorderThickness="1">
+        <Style TargetType="Expander" x:Key="CyberExpander">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Expander">
+                        <Border x:Name="MainBorder" Background="#06FFFFFF" BorderBrush="#12FFFFFF" BorderThickness="1" CornerRadius="10" Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <ToggleButton IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" 
+                                              Template="{StaticResource ExpanderToggleButton}" />
+                                <ContentPresenter Grid.Row="1" 
+                                                  Visibility="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVis}}"
+                                                  Margin="14,0,14,12"/>
+                            </Grid>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
-                            <ItemsControl ItemsSource="{Binding}" Margin="10,5,10,10">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="#222" BorderThickness="0,0,0,1" Padding="5">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0" 
-                                                           Text="{Binding SensorName}" 
-                                                           FontSize="13" 
-                                                           Foreground="#888888" 
-                                                           VerticalAlignment="Center"/>
-                                                <TextBlock Grid.Column="1" 
-                                                           Text="{Binding Value}" 
-                                                           FontSize="14" 
-                                                           FontWeight="Bold" 
-                                                           Foreground="#FFFFFF" 
-                                                           Margin="10,0,0,0"
-                                                           VerticalAlignment="Center"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </Expander>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
-    </Grid>
+    <Border CornerRadius="12" ClipToBounds="True">
+        <Border.Background>
+            <ImageBrush ImageSource="{Binding CurrentBackground}" Stretch="UniformToFill"/>
+        </Border.Background>
+
+        <Border Background="#DC080C10" CornerRadius="12" BorderBrush="#4DDAA520" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8*"/>
+                    <RowDefinition Height="89*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Background="Transparent" Margin="369,0,0,10">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="15,10">
+                        <Button Content="✕" Click="BtnClose_Click" Foreground="#FF5078" Background="Transparent" BorderThickness="0" FontWeight="Bold" FontSize="16" Cursor="Hand" Width="20" Height="20"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid Margin="0,52,0,20" Grid.RowSpan="2">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,10,0">
+                        <TextBlock Text="PC" FontSize="30" FontWeight="Bold" Foreground="#DAA520" Width="35"/>
+                        <TextBlock Text="Stats" FontSize="30" FontWeight="Bold" Foreground="#E6E6FA"/>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,4">
+
+                        <TextBlock Text="v3.0.0" FontSize="13" Foreground="#3A3D42" Width="208" TextAlignment="Left"/>
+                        <TextBlock Text="by.phrnxx" FontSize="13" Foreground="#3A3D42" Cursor="Hand" MouseLeftButtonDown="BtnGithub_Click" Width="80" RenderTransformOrigin="0.5,0.5">
+                            <TextBlock.RenderTransform>
+                                <TransformGroup>
+                                    <ScaleTransform/>
+                                    <SkewTransform AngleY="0.523"/>
+                                    <RotateTransform/>
+                                    <TranslateTransform Y="0.324"/>
+                                </TransformGroup>
+                            </TextBlock.RenderTransform>
+                            <TextBlock.Style>
+                                <Style TargetType="{x:Type TextBlock}">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#DAA520"/>
+                                            <Setter Property="TextDecorations" Value="Underline"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+
+                <Border Grid.Row="2" Background="#08FFFFFF" BorderBrush="#0FFFFFFF" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="10,2,10,20">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Fill="#DAA520" Margin="0,0,10,0">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="#FF5078"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Fill" Value="#DAA520"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard Storyboard="{StaticResource PulseAnim}"/>
+                                            </DataTrigger.EnterActions>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock FontSize="11" Foreground="#DAA520" FontWeight="Bold">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="LINK OFFLINE"/>
+                                    <Setter Property="Foreground" Value="#FF5078"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                            <Setter Property="Text" Value="LINK ESTABLISHED"/>
+                                            <Setter Property="Foreground" Value="#DAA520"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Hidden" Grid.RowSpan="2">
+                    <ItemsControl ItemsSource="{Binding GroupedSensors}" Width="404">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Expander Style="{StaticResource CyberExpander}" IsExpanded="True">
+                                    <ItemsControl ItemsSource="{Binding Sensors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,7">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding SensorName}" FontSize="13" Foreground="#5A5D63" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" Height="2" Background="#0FFFFFFF" Margin="12,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="13" FontWeight="Bold" Foreground="#E8EAED" MinWidth="70" TextAlignment="Right" VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Border>
 </Window>

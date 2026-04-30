@@ -28,8 +28,7 @@ namespace PCStats.UI.IPC
             {
                 try
                 {
-                    // Подключаемся к "трубе", которую создало Ядро
-                    using (var client = new NamedPipeClientStream(".", "PCStatsPipe", PipeDirection.In))
+                    using (var client = new NamedPipeClientStream(".", "PCStatsDataPipe", PipeDirection.In))
                     {
                         ConnectionChanged?.Invoke(this, false);
                         await client.ConnectAsync(5000);
@@ -42,7 +41,6 @@ namespace PCStats.UI.IPC
                                 var json = await reader.ReadLineAsync();
                                 if (!string.IsNullOrEmpty(json))
                                 {
-                                    // Десериализуем данные в наш список моделей
                                     var data = JsonSerializer.Deserialize<List<SensorData>>(json);
                                     DataReceived?.Invoke(this, data);
                                 }
@@ -52,7 +50,6 @@ namespace PCStats.UI.IPC
                 }
                 catch
                 {
-                    // Если сервер не найден, ждем 2 секунды перед повтором
                     await Task.Delay(2000);
                 }
             }

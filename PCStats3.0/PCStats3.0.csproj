@@ -67,7 +67,6 @@
       <DependentUpon>DashboardWindow.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Reference Include="BlackSharp.Core, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\BlackSharp.Core.1.0.7\lib\net472\BlackSharp.Core.dll</HintPath>
@@ -153,6 +152,9 @@
     <Reference Include="System.ValueTuple" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="PCStats.UI\Background\Background01.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.2\build\net471\System.ValueTuple.targets')" />

@@ -1,6 +1,6 @@
 ﻿using LibreHardwareMonitor.Hardware;
 using System.Collections.Generic;
-using System.Linq; // Добавили для удобной фильтрации
+using System.Linq; 
 
 namespace PCStats.Core.Hardware
 {
@@ -21,34 +21,48 @@ namespace PCStats.Core.Hardware
             _computer.Open();
         }
 
-        public Dictionary<string, float?> GetAllStats()
+        public Dictionary<string, string> GetFormattedStats()
         {
-            var stats = new Dictionary<string, float?>();
-
+            var stats = new Dictionary<string, string>();
             foreach (IHardware hardware in _computer.Hardware)
             {
                 hardware.Update();
 
+                string hName = hardware.Name;
+                if (hName.Contains("Ryzen")) hName = "Ryzen" + hName.Substring(hName.IndexOf("Ryzen") + 5);
+                else if (hName.Contains("GeForce RTX")) hName = hName.Substring(hName.IndexOf("RTX"));
+                else if (hName.Contains("Radeon")) hName = hName.Substring(hName.IndexOf("Radeon"));
+
+                else if (hName.Contains("Memory")) hName = "RAM";
+
+                else if (hName.Length > 22) hName = hName.Substring(0, 22) + "...";
+
                 foreach (ISensor sensor in hardware.Sensors)
                 {
-                    if (sensor.Value.HasValue)
+                    if (!sensor.Value.HasValue) continue;
+
+                    string sName = sensor.Name;
+
+                    if (sName.Contains("Thread") || sName.Contains("Effective") || sName.Contains("Port") || sName.Contains("PCIe")) continue;
+
+                    bool isImportant = sensor.SensorType == SensorType.Temperature ||
+                                     (sensor.SensorType == SensorType.Load && sName.Contains("Total")) ||
+                                     (sensor.SensorType == SensorType.Load && sName == "Core") || 
+                                     (sensor.SensorType == SensorType.Clock && sName.Contains("Core #1")) ||
+                                     (sensor.SensorType == SensorType.SmallData && sName.Contains("Memory Used")) || 
+                                     (sensor.SensorType == SensorType.Data && sName.Contains("Memory Used"));  
+
+                    if (isImportant)
                     {
-                        // 1. Убираем "мусорные" датчики, которые забивают список
-                        if (sensor.Name.Contains("Thread") || sensor.Name.Contains("Effective")) continue;
+                        string val = sensor.Value.Value.ToString("0.0");
+                        if (sensor.SensorType == SensorType.Temperature) val += " °C";
+                        else if (sensor.SensorType == SensorType.Load) val += " %";
+                        else if (sensor.SensorType == SensorType.Clock) val += " MHz";
+                        else if (sensor.SensorType == SensorType.SmallData) val += " MB";
+                        else if (sensor.SensorType == SensorType.Data) val += " GB";
+                        else if (sensor.SensorType == SensorType.Power) val += " W";
 
-                        // 2. Оставляем только самое важное (Температуры, Общую нагрузку, Частоту ядер)
-                        bool isImportant = sensor.SensorType == SensorType.Temperature ||
-                                         (sensor.SensorType == SensorType.Load && sensor.Name.Contains("Total")) ||
-                                         (sensor.SensorType == SensorType.Clock && sensor.Name.Contains("Core #1"));
-
-                        if (isImportant)
-                        {
-                            // Формируем короткое имя: "[CPU] Package" или "[GPU] Core"
-                            string hardwareType = hardware.HardwareType.ToString().Replace("GpuNvidia", "GPU").Replace("Cpu", "CPU");
-                            string key = $"[{hardwareType}] {sensor.Name}";
-
-                            stats[key] = sensor.Value;
-                        }
+                        stats[$"[{hName}] {sName}"] = val;
                     }
                 }
             }
