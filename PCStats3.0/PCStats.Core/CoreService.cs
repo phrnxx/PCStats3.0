@@ -56,7 +56,6 @@ namespace PCStats.Core
                 {
                     var rawData = _sensorReader.GetFormattedStats();
 
-                    // ВРЕМЕННАЯ ДИАГНОСТИКА — печатаем один раз при старте
                     if (!debugPrinted)
                     {
                         Console.WriteLine("=== ВСЕ ДАТЧИКИ ===");

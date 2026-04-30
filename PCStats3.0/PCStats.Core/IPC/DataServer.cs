@@ -34,7 +34,6 @@ namespace PCStats.Core.IPC
 
         public async Task BroadcastDataAsync(List<SensorData> data, CancellationToken token)
         {
-            // Формируем пуленепробиваемый текстовый пакет вместо JSON
             StringBuilder sb = new StringBuilder();
             foreach (var s in data)
             {

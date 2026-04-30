@@ -24,7 +24,6 @@ namespace PCStats.Overlay.Hooks
         private List<SensorData> _currentData;
         private TextRenderer _renderer;
 
-        // ФИКС: Оверлей снова скрыт при старте
         private bool _isOverlayVisible = false;
         private CancellationTokenSource _hotkeyCts;
 
@@ -36,7 +35,7 @@ namespace PCStats.Overlay.Hooks
             {
                 FPS = 60,
                 IsTopmost = true,
-                IsVisible = false, // ФИКС: Не показываем сразу
+                IsVisible = false, 
                 X = 20,
                 Y = 20
             };

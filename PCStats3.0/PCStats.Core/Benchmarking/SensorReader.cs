@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace PCStats.Core.Hardware
 {
-    // Visitor который форсирует Update на всём дереве железа включая субхардвар
     public class UpdateVisitor : IVisitor
     {
         public void VisitComputer(IComputer computer) => computer.Traverse(this);
@@ -57,7 +56,6 @@ namespace PCStats.Core.Hardware
                     ProcessSensors(sub, hwName, stats);
             }
 
-            // Если температура CPU = 0 — убираем её совсем, не показываем фейк
             string cpuTempKey = null;
             foreach (var key in stats.Keys)
                 if (key.Contains("CPU Temp")) { cpuTempKey = key; break; }
@@ -96,7 +94,6 @@ namespace PCStats.Core.Hardware
                 if (sensor.SensorType == SensorType.Fan)
                 { val += " RPM"; isImportant = true; }
 
-                // Частота CPU
                 if (sensor.SensorType == SensorType.Clock &&
                     hw.HardwareType == HardwareType.Cpu &&
                     sName == "Core #1")
@@ -106,7 +103,6 @@ namespace PCStats.Core.Hardware
                     isImportant = true;
                 }
 
-                // Фильтры мусора
                 if (sName.Contains("Thread") || sName.Contains("Core #") || sName.Contains("Distance"))
                     isImportant = false;
 
@@ -129,7 +125,6 @@ namespace PCStats.Core.Hardware
 
                 if (!isImportant) continue;
 
-                // Красивые имена
                 if (sName == "CPU Total") sName = "CPU Core";
                 if (sName == "Memory Used" && hw.HardwareType == HardwareType.Memory) sName = "RAM Used";
                 if (sName == "Memory Available" && hw.HardwareType == HardwareType.Memory) sName = "RAM Available";

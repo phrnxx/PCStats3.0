@@ -41,7 +41,6 @@ namespace PCStats.UI.IPC
                                 if (!string.IsNullOrEmpty(rawStr))
                                 {
                                     var data = new List<SensorData>();
-                                    // Режем пакет на отдельные датчики
                                     var records = rawStr.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
 
                                     foreach (var rec in records)

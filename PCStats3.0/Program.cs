@@ -13,7 +13,6 @@ namespace PCStats3
             var core = new CoreService();
             core.Start();
 
-            // Оверлей запускается здесь, но благодаря IsVisible=false он будет ждать Alt+P
             var overlay = new OverlayClient();
             overlay.Start();
 
