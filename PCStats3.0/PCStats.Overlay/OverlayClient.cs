@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipes;
 using System.Text.Json;
 using System.Threading;
@@ -39,22 +40,19 @@ namespace PCStats.Overlay
             {
                 try
                 {
-                    using (var pipeClient = new NamedPipeClientStream(".", "PCStatsDataPipe", PipeDirection.In, PipeOptions.Asynchronous))
+                    using (var client = new NamedPipeClientStream(".", "PCStatsDataPipe", PipeDirection.In, PipeOptions.Asynchronous))
                     {
-                        await pipeClient.ConnectAsync(token);
+                        await client.ConnectAsync(token);
 
-                        byte[] buffer = new byte[8192];
-                        while (pipeClient.IsConnected && !token.IsCancellationRequested)
+                        using (var reader = new StreamReader(client))
                         {
-                            int bytesRead = await pipeClient.ReadAsync(buffer, 0, buffer.Length, token);
-                            if (bytesRead > 0)
+                            while (client.IsConnected && !token.IsCancellationRequested)
                             {
-                                string json = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim('\0');
-                                var data = JsonSerializer.Deserialize<List<SensorData>>(json);
-
-                                if (data != null)
+                                var json = await reader.ReadLineAsync();
+                                if (!string.IsNullOrEmpty(json))
                                 {
-                                    _hook.UpdateData(data);
+                                    var data = JsonSerializer.Deserialize<List<SensorData>>(json);
+                                    if (data != null) _hook.UpdateData(data);
                                 }
                             }
                         }

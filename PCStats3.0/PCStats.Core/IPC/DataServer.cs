@@ -1,8 +1,6 @@
 ﻿using PCStats.Shared.Models;
-using PCStats.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
@@ -18,41 +16,28 @@ namespace PCStats.Core.IPC
 
         public async Task StartAsync(CancellationToken token)
         {
-            Console.WriteLine("Сервер IPC запущен. Ожидание адептов (клиентов)...");
-
             while (!token.IsCancellationRequested)
             {
                 try
                 {
                     var pipeServer = new NamedPipeServerStream(
-                        PipeName,
-                        PipeDirection.Out,
+                        PipeName, PipeDirection.Out,
                         NamedPipeServerStream.MaxAllowedServerInstances,
-                        PipeTransmissionMode.Byte,
-                        PipeOptions.Asynchronous);
+                        PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
                     await pipeServer.WaitForConnectionAsync(token);
-
-                    lock (_connectedClients)
-                    {
-                        _connectedClients.Add(pipeServer);
-                    }
-
-                    Console.WriteLine("Клиент подключен к информационному потоку.");
+                    lock (_connectedClients) { _connectedClients.Add(pipeServer); }
                 }
                 catch (OperationCanceledException) { break; }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Ошибка узла связи: {ex.Message}");
-                }
+                catch { }
             }
         }
 
         public async Task BroadcastDataAsync(List<SensorData> data, CancellationToken token)
         {
-            string json = JsonSerializer.Serialize(data) + Environment.NewLine;
+            // Формируем пакет и жестко добавляем символ переноса строки
+            string json = JsonSerializer.Serialize(data) + "\n";
             byte[] buffer = Encoding.UTF8.GetBytes(json);
-
             List<NamedPipeServerStream> deadClients = new List<NamedPipeServerStream>();
 
             lock (_connectedClients)
@@ -64,23 +49,14 @@ namespace PCStats.Core.IPC
                         if (client.IsConnected)
                         {
                             client.Write(buffer, 0, buffer.Length);
+                            // КРИТИЧЕСКИЙ ФИКС: Проталкиваем данные из буфера прямо в клиент!
+                            client.Flush();
                         }
-                        else
-                        {
-                            deadClients.Add(client);
-                        }
+                        else { deadClients.Add(client); }
                     }
-                    catch
-                    {
-                        deadClients.Add(client);
-                    }
+                    catch { deadClients.Add(client); }
                 }
-
-                foreach (var dead in deadClients)
-                {
-                    _connectedClients.Remove(dead);
-                    dead.Dispose();
-                }
+                foreach (var dead in deadClients) { _connectedClients.Remove(dead); dead.Dispose(); }
             }
         }
     }
