@@ -82,6 +82,10 @@
 
         <Border Background="#DC080C10" CornerRadius="12" BorderBrush="#4DDAA520" BorderThickness="1">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="243*"/>
+                    <ColumnDefinition Width="175*"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -90,13 +94,13 @@
                     <RowDefinition Height="89*"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Background="Transparent" Margin="369,0,0,10">
+                <Grid Grid.Row="0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown" Background="Transparent" Margin="0,0,0,52" Grid.ColumnSpan="2">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="15,10">
-                        <Button Content="✕" Click="BtnClose_Click" Foreground="#FF5078" Background="Transparent" BorderThickness="0" FontWeight="Bold" FontSize="16" Cursor="Hand" Width="20" Height="20"/>
+                        <Button Content="✕" Click="BtnClose_Click" Foreground="#DAA520" Background="Transparent" BorderThickness="0" FontWeight="Bold" FontSize="16" Cursor="Hand" Width="20" Height="20"/>
                     </StackPanel>
                 </Grid>
 
-                <Grid Margin="0,52,0,20" Grid.RowSpan="2">
+                <Grid Margin="0,40,0,0" Grid.ColumnSpan="2">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,10,0">
                         <TextBlock Text="PC" FontSize="30" FontWeight="Bold" Foreground="#DAA520" Width="35"/>
                         <TextBlock Text="Stats" FontSize="30" FontWeight="Bold" Foreground="#E6E6FA"/>
@@ -104,7 +108,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,0,4">
 
-                        <TextBlock Text="v3.0.0" FontSize="13" Foreground="#3A3D42" Width="208" TextAlignment="Left"/>
+                        <TextBlock Text="v3.0.0" FontSize="13" Foreground="#3A3D42" Width="208" TextAlignment="Left" Height="22"/>
                         <TextBlock Text="by.phrnxx" FontSize="13" Foreground="#3A3D42" Cursor="Hand" MouseLeftButtonDown="BtnGithub_Click" Width="80" RenderTransformOrigin="0.5,0.5">
                             <TextBlock.RenderTransform>
                                 <TransformGroup>
@@ -128,7 +132,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Border Grid.Row="2" Background="#08FFFFFF" BorderBrush="#0FFFFFFF" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="10,2,10,20">
+                <Border Grid.Row="2" Background="#08FFFFFF" BorderBrush="#0FFFFFFF" BorderThickness="1" CornerRadius="8" Padding="14,8" Margin="10,2,10,20" Grid.ColumnSpan="2">
                     <StackPanel Orientation="Horizontal">
                         <Ellipse Width="8" Height="8" Fill="#DAA520" Margin="0,0,10,0">
                             <Ellipse.Style>
@@ -162,7 +166,7 @@
                     </StackPanel>
                 </Border>
 
-                <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Hidden" Grid.RowSpan="2">
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Hidden" Grid.RowSpan="3" Grid.ColumnSpan="2" Margin="0,53,0,0">
                     <ItemsControl ItemsSource="{Binding GroupedSensors}" Width="404">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>

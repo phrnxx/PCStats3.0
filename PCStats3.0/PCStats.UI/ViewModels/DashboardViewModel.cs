@@ -59,14 +59,10 @@ namespace PCStats.UI.ViewModels
         {
             if (data == null) return;
 
-            // 1. Сохраняем ссылку на текущее приложение
             var app = Application.Current;
-
-            // 2. ЗАЩИТА: Если приложение уже закрывается или уничтожено, просто игнорируем эти данные
             if (app == null || app.Dispatcher.HasShutdownStarted)
                 return;
 
-            // 3. Безопасный вызов потока UI
             app.Dispatcher.Invoke(() =>
             {
                 var newGroups = data.GroupBy(s => s.HardwareName);
@@ -92,6 +88,15 @@ namespace PCStats.UI.ViewModels
                                 existingSensor.Value = newSensor.Value;
                             else
                                 existingGroup.Sensors.Add(newSensor);
+                        }
+
+                        var sensorsToRemove = existingGroup.Sensors
+                            .Where(old => !group.Any(n => n.SensorName == old.SensorName))
+                            .ToList();
+
+                        foreach (var deadSensor in sensorsToRemove)
+                        {
+                            existingGroup.Sensors.Remove(deadSensor);
                         }
                     }
                 }
