@@ -55,13 +55,55 @@ namespace PCStats.UI.ViewModels
             CurrentBackground = $"/PCStats.UI/Background/Background0{_bgIndex}.jpg";
         }
 
+        // Порядок секций: CPU → GPU → RAM → SSD/NVMe → HDD → Motherboard → остальное
+        private int GetGroupOrder(string hardwareName)
+        {
+            if (hardwareName == null) return 99;
+
+            string n = hardwareName.ToLowerInvariant();
+
+            // CPU
+            if (n.Contains("ryzen") || n.Contains("intel") || n.Contains("core i") ||
+                n.Contains("cpu") || n.Contains("xeon") || n.Contains("threadripper"))
+                return 0;
+
+            // GPU
+            if (n.Contains("rtx") || n.Contains("gtx") || n.Contains("radeon") ||
+                n.Contains("rx ") || n.Contains("gpu") || n.Contains("arc "))
+                return 1;
+
+            // RAM
+            if (n == "ram" || n.Contains("memory") || n.Contains("ddr"))
+                return 2;
+
+            // SSD / NVMe (Kingston, Samsung SSD, etc.)
+            if (n.Contains("kingston") || n.Contains("samsung") || n.Contains("crucial") ||
+                n.Contains("nvme") || n.Contains("ssd") || n.Contains("snv") ||
+                n.Contains("970") || n.Contains("860") || n.Contains("870"))
+                return 3;
+
+            // HDD (Toshiba, Seagate, WD, Hitachi)
+            if (n.Contains("toshiba") || n.Contains("seagate") || n.Contains("western") ||
+                n.Contains("wd") || n.Contains("hitachi") || n.Contains("hgst") ||
+                n.Contains("dt01") || n.Contains("barracuda"))
+                return 4;
+
+            // Motherboard
+            if (n.Contains("gigabyte") || n.Contains("asus") || n.Contains("msi") ||
+                n.Contains("asrock") || n.Contains("aorus") || n.Contains("motherboard") ||
+                n.Contains("b550") || n.Contains("b450") || n.Contains("x570") ||
+                n.Contains("z690") || n.Contains("b660"))
+                return 5;
+
+            return 99;
+        }
+
         private void OnDataReceived(object sender, List<SensorData> data)
         {
             if (data == null) return;
 
             var app = Application.Current;
-            if (app == null || app.Dispatcher.HasShutdownStarted)
-                return;
+            if (app == null || app.Dispatcher.HasShutdownStarted) return;
 
             app.Dispatcher.Invoke(() =>
             {
@@ -75,7 +117,16 @@ namespace PCStats.UI.ViewModels
                     {
                         var newG = new HardwareGroup { Key = group.Key };
                         foreach (var s in group) newG.Sensors.Add(s);
-                        GroupedSensors.Add(newG);
+
+                        // Вставляем группу в правильную позицию по порядку
+                        int newOrder = GetGroupOrder(group.Key);
+                        int insertIndex = 0;
+                        for (int i = 0; i < GroupedSensors.Count; i++)
+                        {
+                            if (GetGroupOrder(GroupedSensors[i].Key) <= newOrder)
+                                insertIndex = i + 1;
+                        }
+                        GroupedSensors.Insert(insertIndex, newG);
                     }
                     else
                     {
@@ -95,9 +146,7 @@ namespace PCStats.UI.ViewModels
                             .ToList();
 
                         foreach (var deadSensor in sensorsToRemove)
-                        {
                             existingGroup.Sensors.Remove(deadSensor);
-                        }
                     }
                 }
             });

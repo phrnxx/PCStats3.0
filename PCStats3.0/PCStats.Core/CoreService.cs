@@ -48,11 +48,24 @@ namespace PCStats.Core
 
         private async Task MonitoringLoop(CancellationToken token)
         {
+            bool debugPrinted = false;
+
             while (!token.IsCancellationRequested)
             {
                 try
                 {
                     var rawData = _sensorReader.GetFormattedStats();
+
+                    // ВРЕМЕННАЯ ДИАГНОСТИКА — печатаем один раз при старте
+                    if (!debugPrinted)
+                    {
+                        Console.WriteLine("=== ВСЕ ДАТЧИКИ ===");
+                        foreach (var item in rawData)
+                            Console.WriteLine($"{item.Key} = {item.Value}");
+                        Console.WriteLine("===================");
+                        debugPrinted = true;
+                    }
+
                     var sensorList = new List<SensorData>();
 
                     foreach (var item in rawData)
@@ -65,12 +78,12 @@ namespace PCStats.Core
                         {
                             HardwareName = hName,
                             SensorName = sName,
-                            Value = item.Value 
+                            Value = item.Value
                         });
                     }
 
                     await _dataServer.BroadcastDataAsync(sensorList, token);
-                    await Task.Delay(1000, token); 
+                    await Task.Delay(1000, token);
                 }
                 catch (TaskCanceledException)
                 {

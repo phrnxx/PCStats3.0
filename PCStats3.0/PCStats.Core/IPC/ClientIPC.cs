@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Text.Json;
 using System.Threading.Tasks;
 using PCStats.Shared.Models;
 
@@ -38,11 +37,27 @@ namespace PCStats.UI.IPC
                         {
                             while (_isRunning && client.IsConnected)
                             {
-                                var json = await reader.ReadLineAsync();
-                                if (!string.IsNullOrEmpty(json))
+                                var rawStr = await reader.ReadLineAsync();
+                                if (!string.IsNullOrEmpty(rawStr))
                                 {
-                                    var data = JsonSerializer.Deserialize<List<SensorData>>(json);
-                                    if (data != null) DataReceived?.Invoke(this, data);
+                                    var data = new List<SensorData>();
+                                    // Режем пакет на отдельные датчики
+                                    var records = rawStr.Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                    foreach (var rec in records)
+                                    {
+                                        var fields = rec.Split('\t');
+                                        if (fields.Length == 3)
+                                        {
+                                            data.Add(new SensorData
+                                            {
+                                                HardwareName = fields[0],
+                                                SensorName = fields[1],
+                                                Value = fields[2]
+                                            });
+                                        }
+                                    }
+                                    if (data.Count > 0) DataReceived?.Invoke(this, data);
                                 }
                             }
                         }

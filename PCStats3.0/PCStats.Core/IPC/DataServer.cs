@@ -1,10 +1,8 @@
 ﻿using PCStats.Shared.Models;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.IO.Pipes;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,7 +34,14 @@ namespace PCStats.Core.IPC
 
         public async Task BroadcastDataAsync(List<SensorData> data, CancellationToken token)
         {
-            string json = JsonSerializer.Serialize(data);
+            // Формируем пуленепробиваемый текстовый пакет вместо JSON
+            StringBuilder sb = new StringBuilder();
+            foreach (var s in data)
+            {
+                sb.Append($"{s.HardwareName}\t{s.SensorName}\t{s.Value}|");
+            }
+            string payload = sb.ToString() + "\n";
+            byte[] buffer = Encoding.UTF8.GetBytes(payload);
 
             NamedPipeServerStream[] clients;
             lock (_connectedClients) { clients = _connectedClients.ToArray(); }
@@ -49,11 +54,8 @@ namespace PCStats.Core.IPC
                 {
                     if (client.IsConnected)
                     {
-                        using (var writer = new StreamWriter(client, new UTF8Encoding(false), 1024, leaveOpen: true))
-                        {
-                            await writer.WriteLineAsync(json);
-                            await writer.FlushAsync();
-                        }
+                        await client.WriteAsync(buffer, 0, buffer.Length, token);
+                        await client.FlushAsync(token);
                     }
                     else { deadClients.Add(client); }
                 }

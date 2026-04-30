@@ -43,6 +43,16 @@
     <Reference Include="LibreHardwareMonitorLib">
       <HintPath>..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\LibreHardwareMonitorLib.dll</HintPath>
     </Reference>
+    <!-- Все зависимости LHM 0.9.6 которые не копируются автоматически -->
+    <Reference Include="RAMSPDToolkit-NDD">
+      <HintPath>..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\RAMSPDToolkit-NDD.dll</HintPath>
+    </Reference>
+    <Reference Include="DiskInfoToolkit">
+      <HintPath>..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\DiskInfoToolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="HidSharp">
+      <HintPath>..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\HidSharp.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX">
       <HintPath>..\packages\SharpDX.4.2.0\lib\net45\SharpDX.dll</HintPath>
     </Reference>
@@ -85,6 +95,24 @@
     <None Include="App.config" />
     <None Include="App.manifest" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <!-- Копируем ВСЕ зависимости LHM в output при сборке -->
+  <ItemGroup>
+    <None Include="..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\RAMSPDToolkit-NDD.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\DiskInfoToolkit.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\HidSharp.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\Aga.Controls.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\packages\LibreHardwareMonitorLib.0.9.6\runtimes\win-x64\lib\net472\BlackSharp.Core.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PCStats.Core\Benchmarking\SensorReader.cs" />
